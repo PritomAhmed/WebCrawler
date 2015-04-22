@@ -3,6 +3,8 @@
  */
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -11,20 +13,20 @@ public class Crawler extends Thread {
 
     String startUrl;
     static final int MAX_PAGES_TO_CRAWL = 100000;
-    Set<String> pagesVisited = new ConcurrentSkipListSet<>();
-    ConcurrentLinkedQueue<String> pagesToBeVisited = new ConcurrentLinkedQueue<>();
+    static Set<String> pagesVisited = new ConcurrentSkipListSet<>();
+    List<String> pagesToBeVisited = new ArrayList<>();
 
     public Crawler(String startUrl) {
         this.startUrl = startUrl;
     }
 
     public void run() {
-        while(this.pagesVisited.size() < MAX_PAGES_TO_CRAWL) {
+        while(pagesVisited.size() < MAX_PAGES_TO_CRAWL) {
             String currentUrl;
             CrawlingWorker worker = new CrawlingWorker();
-            if (this.pagesToBeVisited.isEmpty()) {
+            if (pagesToBeVisited.isEmpty()) {
                 currentUrl = startUrl;
-                this.pagesVisited.add(startUrl);
+                pagesVisited.add(startUrl);
             } else {
                 currentUrl = this.nextUrl();
             }
@@ -34,17 +36,18 @@ public class Crawler extends Thread {
                 e.printStackTrace();
             }
 
-            this.pagesToBeVisited.addAll(worker.getLinks());
+            pagesToBeVisited.addAll(worker.getLinks());
         }
-        System.out.println(String.format("**Done** Visited %s web page(s)", this.pagesVisited.size()));
+        System.out.println(String.format("**Done** Visited %s web page(s)", pagesVisited.size()));
     }
 
     private String nextUrl() {
         String nextUrl;
         do {
-            nextUrl = this.pagesToBeVisited.poll();
-        } while(this.pagesVisited.contains(nextUrl));
-        this.pagesVisited.add(nextUrl);
+            /*Todo: Can be made random*/
+            nextUrl = pagesToBeVisited.remove(0);
+        } while(pagesVisited.contains(nextUrl));
+        pagesVisited.add(nextUrl);
         return nextUrl;
     }
 }

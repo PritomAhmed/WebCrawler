@@ -30,18 +30,25 @@ public class CrawlingWorker {
     }
 
     public void crawl(String currentUrl) throws IOException {
-        if (!StringUtil.isBlank(currentUrl) && RobotExclusionUtil.robotsShouldFollow(currentUrl) && currentUrl.contains(".edu")) {
+        if (!StringUtil.isBlank(currentUrl) && RobotExclusionUtil.robotsShouldFollow(currentUrl) && !currentUrl.contains("#")) { //&& currentUrl.contains(".edu")) {
             try {
+                long startTime = System.currentTimeMillis();
+
                 Connection connection = Jsoup.connect(currentUrl).userAgent(USER_AGENT);
                 Document htmlDocument = connection.get();
-                writeToFile(htmlDocument);
+                if (htmlDocument.text() != null) {
+                    writeToFile(htmlDocument);
 
-                System.out.println("Received web page at " + currentUrl);
+                    long endTime = System.currentTimeMillis();
+                    long totalTime = endTime - startTime;
 
-                Elements linksOnPage = htmlDocument.select("a[href]");
-                System.out.println("Found (" + linksOnPage.size() + ") links");
-                for (Element link : linksOnPage) {
-                    this.links.add(link.absUrl("href"));
+                    System.out.println("Received web page at " + currentUrl + " time elapsed " + totalTime);
+
+                    Elements linksOnPage = htmlDocument.select("a[href]");
+                    System.out.println("Found (" + linksOnPage.size() + ") links" + " Thread " + Thread.currentThread().getName());
+                    for (Element link : linksOnPage) {
+                        this.links.add(link.absUrl("href"));
+                    }
                 }
             }catch(IOException ioe){
                 // We were not successful in our HTTP request
@@ -60,7 +67,7 @@ public class CrawlingWorker {
             file.createNewFile();
         }
 
-        crc.update(htmlDocument.body().text().getBytes());
+        crc.update(htmlDocument.text().getBytes());
         long cval = crc.getValue();
         if (!crclib.contains(cval)) {
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);

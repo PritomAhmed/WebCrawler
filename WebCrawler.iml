@@ -9,5 +9,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jsoup-1.8.2-javadoc" level="project" />
     <orderEntry type="library" name="jsoup-1.8.2" level="project" />
+    <orderEntry type="library" name="commons-validator-1.4.1" level="project" />
+    <orderEntry type="library" name="org.osgi.foundation-1.0.0" level="project" />
   </component>
 </module>

@@ -2,45 +2,49 @@
  * Created by pritom on 4/19/2015.
  */
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
-public class Crawler {
-    public static void main(String[] args) throws IOException {
-        Set<String> pagesVisited = new HashSet<String>();
-        List<String> pagesToBeVisited = new LinkedList<String>();
-        Document doc = Jsoup.connect("http://*.edu/").get();
-        String title = doc.title();
+public class Crawler extends Thread {
+
+    String startUrl;
+    static final int MAX_PAGES_TO_CRAWL = 100000;
+    Set<String> pagesVisited = new ConcurrentSkipListSet<>();
+    ConcurrentLinkedQueue<String> pagesToBeVisited = new ConcurrentLinkedQueue<>();
+
+    public Crawler(String startUrl) {
+        this.startUrl = startUrl;
     }
 
-    public static void processPage(String URL) throws IOException, IOException {
-        //check if the given URL is already in database
-        String sql = "select * from Record where URL = '" + URL + "'";
+    public void run() {
+        while(this.pagesVisited.size() < MAX_PAGES_TO_CRAWL) {
+            String currentUrl;
+            CrawlingWorker worker = new CrawlingWorker();
+            if (this.pagesToBeVisited.isEmpty()) {
+                currentUrl = startUrl;
+                this.pagesVisited.add(startUrl);
+            } else {
+                currentUrl = this.nextUrl();
+            }
+            try {
+                worker.crawl(currentUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        //store the URL to database to avoid parsing again
-        sql = "INSERT INTO  `Crawler`.`Record` " + "(`URL`) VALUES " + "(?);";
-
-        //get useful information
-        Document doc = Jsoup.connect("http://www.mit.edu/").get();
-
-        if (doc.text().contains("research")) {
-            System.out.println(URL);
+            this.pagesToBeVisited.addAll(worker.getLinks());
         }
-
-        //get all links and recursively call the processPage method
-        Elements questions = doc.select("a[href]");
-        for (Element link : questions) {
-            if (link.attr("href").contains("mit.edu"))
-                processPage(link.attr("abs:href"));
-        }
+        System.out.println(String.format("**Done** Visited %s web page(s)", this.pagesVisited.size()));
     }
 
+    private String nextUrl() {
+        String nextUrl;
+        do {
+            nextUrl = this.pagesToBeVisited.poll();
+        } while(this.pagesVisited.contains(nextUrl));
+        this.pagesVisited.add(nextUrl);
+        return nextUrl;
+    }
 }

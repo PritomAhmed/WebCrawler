@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by pritom on 4/20/2015.
@@ -15,6 +17,15 @@ public class CrawlerLauncher {
                 Thread thread = new Crawler(line);
                 thread.start();
             }
+
+            /*Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("----------------" + Thread.activeCount());
+                }
+            }, 45000);*/
+
         }
     }
 }

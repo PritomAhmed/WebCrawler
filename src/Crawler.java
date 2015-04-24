@@ -2,17 +2,19 @@
  * Created by pritom on 4/19/2015.
  */
 
+import org.apache.commons.validator.routines.UrlValidator;
+import org.jsoup.helper.StringUtil;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Crawler extends Thread {
 
     String startUrl;
-    static final int MAX_PAGES_TO_CRAWL = 100000;
+    static final int MAX_PAGES_TO_CRAWL = 10;
     static Set<String> pagesVisited = new ConcurrentSkipListSet<>();
     List<String> pagesToBeVisited = new ArrayList<>();
 
@@ -35,10 +37,20 @@ public class Crawler extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            pagesToBeVisited.addAll(worker.getLinks());
+            addUrls(worker.getLinks());
         }
         System.out.println(String.format("**Done** Visited %s web page(s)", pagesVisited.size()));
+    }
+
+    private void addUrls(List<String> links) {
+        UrlValidator urlValidator = new UrlValidator();
+        for (String link : links) {
+            if (!StringUtil.isBlank(link)
+                    && urlValidator.isValid(link)
+                    && !link.contains("#")) {
+                pagesToBeVisited.add(link);
+            }
+        }
     }
 
     private String nextUrl() {
@@ -47,7 +59,7 @@ public class Crawler extends Thread {
             /*Todo: Can be made random*/
             nextUrl = pagesToBeVisited.remove(0);
         } while(pagesVisited.contains(nextUrl));
-        pagesVisited.add(nextUrl);
+
         return nextUrl;
     }
 }

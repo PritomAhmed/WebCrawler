@@ -45,9 +45,9 @@ public class CrawlingWorker {
                     startTime = System.currentTimeMillis();
                     writeToFile(htmlDocument);
                     endTime = System.currentTimeMillis();
-                    System.out.println(currentUrl + " time elapsed in connection "
-                            + totalTime + " time elapsed in writing " + (endTime - startTime)
-                            + " " + Thread.currentThread().getName());
+//                    System.out.println(currentUrl + " time elapsed in connection "
+//                            + totalTime + " time elapsed in writing " + (endTime - startTime)
+//                            + " " + Thread.currentThread().getName());
 
                     Elements linksOnPage = htmlDocument.select("a[href]");
                     //System.out.println("Found (" + linksOnPage.size() + ") links" + " Thread " + Thread.currentThread().getName());

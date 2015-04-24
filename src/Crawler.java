@@ -50,11 +50,13 @@ public class Crawler extends Thread {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                addUrls(getLinks());
+                if (pagesToBeVisited.size() < (MAX_PAGES_TO_CRAWL / 10000)) {
+                    addUrls(getLinks());
+                }
             }
             System.out.println(String.format("**Done** Visited %s web page(s)", pagesVisited.size()));
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage() + " " + e.getLocalizedMessage());
+            System.out.println(e.getMessage() + " " + e.getLocalizedMessage() + " size : " + pagesToBeVisited.size());
         }
     }
 

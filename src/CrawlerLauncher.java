@@ -2,8 +2,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by pritom on 4/20/2015.

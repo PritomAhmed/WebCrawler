@@ -3,7 +3,6 @@
  */
 
 import org.apache.commons.validator.routines.UrlValidator;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
@@ -14,7 +13,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.zip.CRC32;
 
@@ -56,7 +58,10 @@ public class Crawler extends Thread {
             }
             System.out.println(String.format("**Done** Visited %s web page(s)", pagesVisited.size()));
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage() + " " + e.getLocalizedMessage() + " size : " + pagesToBeVisited.size());
+            e.printStackTrace();
+            System.out.println(e.getMessage() + " " + e.getLocalizedMessage()
+                    + " size : " + pagesToBeVisited.size()
+                    + " Threads alive : " + Thread.activeCount());
         }
     }
 
@@ -83,11 +88,12 @@ public class Crawler extends Thread {
                 try {
                     htmlDocument = Jsoup.connect(currentUrl).userAgent(USER_AGENT).get();
                 } catch (OutOfMemoryError ignored) {
+                    ignored.printStackTrace();
                     System.out.println(currentUrl);
                 }
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
-                if (htmlDocument.text() != null) {
+                if (htmlDocument != null && htmlDocument.text() != null) {
                     startTime = System.currentTimeMillis();
                     crc.update(htmlDocument.text().getBytes());
                     long cval = crc.getValue();
@@ -103,6 +109,7 @@ public class Crawler extends Thread {
 
                     Elements linksOnPage = htmlDocument.select("a[href]");
                     //System.out.println("Found (" + linksOnPage.size() + ") links" + " Thread " + Thread.currentThread().getName());
+                    links.clear();
                     for (Element link : linksOnPage) {
                         this.links.add(link.absUrl("href"));
                     }

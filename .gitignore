@@ -50,3 +50,4 @@ output
 *.iml
 *.ipr
 target
+*.jar

@@ -21,20 +21,22 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.zip.CRC32;
 
 public class Crawler extends Thread {
-
     String startUrl;
-    static final int MAX_PAGES_TO_CRAWL = 10000000;
+    static int MAX_PAGES_TO_CRAWL; // = 10000000;
+    static String output_dir;
     static Set<String> pagesVisited = new ConcurrentSkipListSet<>();
     List<String> pagesToBeVisited = new ArrayList<>();
-
     private static Random random = new Random();
+    CRC32 crc = new CRC32();
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) " +
             "Chrome/13.0.782.112 Safari/535.1";
     List<String> links = new ArrayList<>();
     static Set<Long> crclib = new ConcurrentSkipListSet<>();
 
-    public Crawler(String startUrl) {
+    public Crawler(String startUrl, int max_page_number, String outputDirectory ) {
         this.startUrl = startUrl;
+        MAX_PAGES_TO_CRAWL = max_page_number;
+        output_dir = outputDirectory;
     }
 
     public void run() {
@@ -70,13 +72,11 @@ public class Crawler extends Thread {
         for (String link : links) {
             if (!StringUtil.isBlank(link)
                     && urlValidator.isValid(link)
-                    && !link.contains("#")) {
+                    && link.contains(".edu")) {
                 pagesToBeVisited.add(link);
             }
         }
     }
-
-    CRC32 crc = new CRC32();
 
     public void crawl(String currentUrl) throws IOException {
         try {
@@ -93,6 +93,7 @@ public class Crawler extends Thread {
                 }
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
+
                 if (htmlDocument != null && htmlDocument.text() != null) {
                     startTime = System.currentTimeMillis();
                     crc.update(htmlDocument.text().getBytes());
@@ -100,19 +101,14 @@ public class Crawler extends Thread {
                     crc.reset();
                     if (!crclib.contains(cval)) {
                         crclib.add(cval);
-                        writeToFile(htmlDocument);
+                        writeToFile(currentUrl, htmlDocument);
                     }
                     endTime = System.currentTimeMillis();
 //                    System.out.println(currentUrl + " time elapsed in connection "
 //                            + totalTime + " time elapsed in writing " + (endTime - startTime)
 //                            + " " + Thread.currentThread().getName());
 
-                    Elements linksOnPage = htmlDocument.select("a[href]");
                     //System.out.println("Found (" + linksOnPage.size() + ") links" + " Thread " + Thread.currentThread().getName());
-                    links.clear();
-                    for (Element link : linksOnPage) {
-                        this.links.add(link.absUrl("href"));
-                    }
                 }
             }
         } catch (IOException ioe) {
@@ -121,21 +117,49 @@ public class Crawler extends Thread {
 
     }
 
-    private void writeToFile(Document htmlDocument) throws IOException {
+    private void writeToFile(String url, Document htmlDocument) throws IOException {
         //String title = "".equals(htmlDocument.title().trim()) ? htmlDocument.head().text().replaceAll("\\W+", "")
         //        : htmlDocument.title().trim().replaceAll("\\W+", "");
 
-        File file = new File("output/" + random.nextLong() + ".txt");
+        //File file = new File("output/" + random.nextLong() + ".txt");
+        File file = new File(Crawler.output_dir +"/" + random.nextLong() + ".txt");
         // if file doesnt exists, then create it
         if (!file.exists()) {
             file.createNewFile();
         } else {
             System.out.println("********************************* " + file.getName());
         }
+
+        //Get description from document object.
+        String description = "";
+
+        Elements linksOnPage = htmlDocument.select("a[href]");
+        links.clear();
+        for (Element link : linksOnPage) {
+            this.links.add(link.absUrl("href"));
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (String link : links) {
+            builder.append(link).append(System.getProperty("line.separator"));
+        }
+
+        if (htmlDocument.select("meta[name=description]") != null && htmlDocument.select("meta[name=description]").size() > 0) {
+            description = htmlDocument.select("meta[name=description]").get(0).attr("content");
+        }
+
         FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
         BufferedWriter bw = new BufferedWriter(fw);
         bw.append(htmlDocument.title());
         bw.newLine();
+        bw.append("Description : ").append(description);
+        bw.newLine();
+        bw.append("URL : ").append(url);
+        bw.newLine();
+        bw.append("Links : ");
+        bw.newLine();
+        bw.append(builder.toString());
+        bw.append("Text : ");
         bw.append(htmlDocument.text());
         bw.newLine();
         bw.close();
@@ -148,7 +172,6 @@ public class Crawler extends Thread {
             /*Todo: Can be made random*/
             nextUrl = pagesToBeVisited.remove(0);
         } while (pagesVisited.contains(nextUrl));
-
         return nextUrl;
     }
 }

@@ -54,9 +54,7 @@ public class Crawler extends Thread {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                if (pagesToBeVisited.size() < 1000 || pagesToBeVisited.size() + links.size() < 100000) {
-                    addUrls(links);
-                }
+                addUrls(links);
             }
             System.out.println(String.format("**Done** Visited %s web page(s)", pagesVisited.size()));
         } catch (RuntimeException e) {

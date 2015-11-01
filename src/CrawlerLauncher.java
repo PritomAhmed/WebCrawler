@@ -26,6 +26,9 @@ public class CrawlerLauncher {
                 thread.start();
             }
 
+//            Crawler crawler = new Crawler();
+//            crawler.crawl("http://www.bucknell.edu/info-about-attending-bucknell/who-we-are/bucknell-stories/faculty-stories/paula-kazi.html");
+
             /*Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override

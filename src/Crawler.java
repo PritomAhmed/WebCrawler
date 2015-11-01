@@ -78,6 +78,7 @@ public class Crawler extends Thread {
 
     public void crawl(String currentUrl) throws IOException {
         try {
+            System.out.println("------------------");
             if (RobotExclusionUtil.robotsShouldFollow(currentUrl)) {
                 pagesVisited.add(currentUrl);
                 long startTime = System.currentTimeMillis();
@@ -91,6 +92,8 @@ public class Crawler extends Thread {
                 }
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
+
+                writeToFile(currentUrl, htmlDocument);
 
                 if (htmlDocument != null && htmlDocument.text() != null) {
                     startTime = System.currentTimeMillis();
